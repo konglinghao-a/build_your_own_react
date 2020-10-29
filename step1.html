@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>build your own react step1</title>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script>
+    // <script type="text/jsx">
+
+    /**
+     * react的代码：
+     *
+     * const element = (
+     *  <div id="foo">
+     *    <a>bar</a>
+     *    <b />
+     *  </div>
+     * )
+     * const container = document.getElementById("root");
+     * ReactDOM.render(element, container);
+     */
+
+    /**
+      * 上面的 element 是由 createElement 函数生成
+      * const element = React.createElement(
+      * "div",
+      * { id: "foo" },
+      * React.createElement("a", null, "bar"),
+      * React.createElement("b")
+      * )
+      * 下面就来写一些 createElement 函数
+      */
+    function createElement(type, props, ...children) {
+      return {
+        type,
+        props: {
+          ...props,
+          /**
+          * 经过下面的操作，children 就包含了原始类型如 string 和 number,
+          * 要注意的是，react 不会包含原始类型或者创建空的数组，但是这里为了
+          * 方便我们这么做了
+          */
+          children: children.map(child =>
+            typeof child === 'object'
+              ? child
+              : createTextElement(child)
+          )
+        }
+      }
+    }
+
+    function createTextElement(text) {
+      return {
+        type: "TEXT_ELEMENT",
+        props: {
+          nodeValue: text,
+          children: []
+        }
+      }
+    }
+
+    function render(element, container) {
+      // 如果是文本那就创建 text node 代替常规的 node
+      const dom = element.type === "TEXT_ELEMENT"
+        ? document.createTextNode("")
+        : document.createElement(element.type);
+
+      // 为 dom 元素添加 element 上的信息，需要把 element.props 的 children 属性去除
+      const isProperty = key => key !== "children";
+      Object.keys(element.props)
+        .filter(isProperty)
+        .forEach(name => {
+          dom[name] = element.props[name];
+        })
+
+      /**
+       * 通过递归的方式来将 element 元素的信息添加到 dom 元素上，但是递归会出现一个问题：
+       * 递归的时候没办法停止渲染，一旦开始渲染，那就要等到整棵 element 树渲染完了才行能
+       * 停下来，如果一棵树很大，那就会长时间地阻塞主线程，这个时候就会影响到用户的操作。
+       */
+      element.props.children.forEach(child => {
+        render(child, dom)
+      })
+
+      container.appendChild(dom);
+    }
+
+    const MyReact = {
+      createElement,
+      render
+    }
+
+    /**
+    * 有了上面的函数，我们仍然想用 jsx，那么就可以引入 babel，需要注意的是
+    * 然后像下面这样写：
+    */
+    /** @jsx MyReact.createElement */
+    const element = (
+      <div id="foo">
+        <a>bar</a>
+        <b />
+      </div>
+    )
+
+    const container = document.getElementById("root");
+
+    /**
+     * 接下来就要写我们自己的 ReactDOM.render 函数，现在只关心把东西填充到 dom 里，
+     * 更新和删除后面再说
+     */
+    MyReact.render(element, container)
+
+  </script>
+</body>
+
+</html>

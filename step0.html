@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>build your own react step0</title>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script>
+    /**
+     * step1：调用 React.createElement()，实际上就是创建了一个
+     * elemnt 对象。
+     */
+    const element = {
+      type: "h1",
+      props: {
+        title: "foo",
+        children: "hello world!"
+      }
+    }
+
+    /**
+     * step2：获取 dom 元素当作容器
+     */
+    const container = document.getElementById('root');
+
+
+    /**
+     * step3：ReactDOM.render(element, container)，要做的就是把一个
+     * javascript 对象解析，然后生成 dom 节点加入到页面上
+     */
+    const node = document.createElement(element.type);
+    node["title"] = element.props.title;
+
+    const text = document.createTextNode("");
+    text["nodeValue"] = element.props.children;
+
+    node.appendChild(text);
+    container.appendChild(node);
+
+  </script>
+</body>
+
+</html>
